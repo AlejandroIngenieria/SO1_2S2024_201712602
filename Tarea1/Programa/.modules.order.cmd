@@ -1,0 +1,1 @@
+savedcmd_/home/josue/Escritorio/so1_laboratorio/Tarea1/modules.order := {   echo /home/josue/Escritorio/so1_laboratorio/Tarea1/sysinfo.o; :; } > /home/josue/Escritorio/so1_laboratorio/Tarea1/modules.order

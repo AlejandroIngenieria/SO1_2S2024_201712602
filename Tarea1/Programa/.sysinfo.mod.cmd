@@ -1,0 +1,1 @@
+savedcmd_/home/josue/Escritorio/so1_laboratorio/Tarea1/sysinfo.mod := printf '%s\n'   sysinfo.o | awk '!x[$$0]++ { print("/home/josue/Escritorio/so1_laboratorio/Tarea1/"$$0) }' > /home/josue/Escritorio/so1_laboratorio/Tarea1/sysinfo.mod
