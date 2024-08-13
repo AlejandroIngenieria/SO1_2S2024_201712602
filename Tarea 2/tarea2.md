@@ -24,3 +24,26 @@ done
 
 # Contenedores
 ![alt text](containers.png)
+## Listar contenedores
+Solo los creados con la imagen de Alpine
+```bash
+docker ps -a --filter "ancestor=alpine"
+```
+Todos los contenedores
+```bash
+sudo docker ps -a
+```
+## Eliminar contenedores
+Primero los detenemos
+```bash
+sudo docker stop $(sudo docker ps -q)
+```
+
+Eliminar un contenedor individualmente
+```bash
+sudo docker rm nombre_del_contenedor
+```
+Eliminar en conjunto
+```bash
+sudo docker rm $(sudo docker ps -a -q --filter "ancestor=alpine")
+```
