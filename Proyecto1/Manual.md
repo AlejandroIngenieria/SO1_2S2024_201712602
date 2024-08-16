@@ -148,8 +148,7 @@ docker rm $(docker ps -a --filter "ancestor=bajo_ram" -q) $(docker ps -a --filte
 crontab -e
 ```
 #### Añadimos la configuracion para 30 segundos con la **(ruta donde este el archivo que crea los contenedores)**
-```bash
-  GNU nano 7.2                                                                       /tmp/crontab.q0rChD/crontab                                                                                
+```bash                                                                       
 * * * * * /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/2-createContainers.sh
 * * * * * sleep 30; /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/2-createContainers.sh
 ```
