@@ -131,8 +131,6 @@ crear_contenedores
 
 ### Logs del script
 ![alt text](<imgs/3. script.png>)
-### Verificando la creacion de los contenedores
-![alt text](<imgs/4. containers.png>)
 
 ## Comando para detener contenedores
 ```bash
@@ -152,7 +150,8 @@ crontab -e
 * * * * * /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/2-createContainers.sh
 * * * * * sleep 30; /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/2-createContainers.sh
 ```
-
+#### Verificando la creacion de los contenedores
+![alt text](<imgs/4. containers.png>)
 
 # 2. Módulos de Kernel
 # 3. Servicio de Rust
