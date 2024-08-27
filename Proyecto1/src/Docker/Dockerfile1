@@ -1,0 +1,8 @@
+# Dockerfile para alto consumo de CPU
+FROM python:3.9-slim
+
+# Copiar el script de Python al contenedor
+COPY Docker/alto_cpu.py /Docker/alto_cpu.py
+
+# Ejecutar el script y mantener el contenedor corriendo
+CMD ["sh", "-c", "python /Docker/alto_cpu.py && tail -f /dev/null"]

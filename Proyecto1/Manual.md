@@ -147,8 +147,8 @@ crontab -e
 ```
 #### Añadimos la configuracion para 30 segundos con la **(ruta donde este el archivo que crea los contenedores)**
 ```bash                                                                       
-* * * * * /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/2-createContainers.sh
-* * * * * sleep 30; /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/2-createContainers.sh
+* * * * * /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/scripts/2-createContainers.sh
+* * * * * sleep 30; /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/scripts/2-createContainers.sh
 ```
 #### Verificando la creacion de los contenedores
 ![alt text](<imgs/4. containers.png>)
