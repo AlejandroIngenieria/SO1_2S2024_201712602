@@ -1,0 +1,9 @@
+# Dockerfile para bajo consumo de CPU
+FROM python:3.9-slim
+
+# Crear un script de Python que no consuma mucha CPU
+COPY /Docker/bajo_cpu.py /Docker/bajo_cpu.py
+
+RUN pip install flask
+# Ejecutar el script y mantener el contenedor corriendo
+CMD ["python", "/Docker/bajo_cpu.py"]

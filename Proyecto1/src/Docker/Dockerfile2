@@ -1,8 +1,0 @@
-# Dockerfile para alto consumo de RAM
-FROM python:3.9-slim
-
-# Crear un script de Python que consuma bastante memoria
-COPY Docker/alto_ram.py /Docker/alto_ram.py
-
-# Ejecutar el script y mantener el contenedor corriendo
-CMD ["sh", "-c", "python /Docker/alto_ram.py && tail -f /dev/null"]

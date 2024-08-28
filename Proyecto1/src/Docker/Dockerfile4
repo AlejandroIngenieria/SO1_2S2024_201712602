@@ -1,8 +1,0 @@
-# Dockerfile para bajo consumo de RAM
-FROM python:3.9-slim
-
-# Crear un script de Python que no consuma mucha RAM
-COPY Docker/bajo_ram.py /Docker/bajo_ram.py
-
-# Ejecutar el script y mantener el contenedor corriendo
-CMD ["sh", "-c", "python /Docker/bajo_ram.py && tail -f /dev/null"]

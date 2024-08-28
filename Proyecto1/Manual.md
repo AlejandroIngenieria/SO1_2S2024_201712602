@@ -27,43 +27,121 @@
 <!-- ----------------------------------------------------------------------- -->
 # 1. Script Creador de Contenedores
 ## Creacion de las 4 imagenes base
-### Contenedores de alto consumo
-#### Alto consumo de RAM
-```Dockerfile
-FROM ubuntu:latest
-RUN apt-get update && apt-get install -y stress
-CMD ["stress", "--cpu", "4"]
-```
-* **Base:** ubuntu:latest
-* **Paquete instalado:** stress
-* **Comando de Ejecución:**: stress con opción para usar 4 núcleos de CPU.
-#### Alto consumo de CPU
-```Dockerfile
-FROM ubuntu:latest
-RUN apt-get update && apt-get install -y stress
-CMD ["stress", "--vm", "2", "--vm-bytes", "512M"]
-```
-* **Base:** ubuntu:latest
-* **Paquete instalado:** stress
-* **Comando de Ejecución:**: stress con opción para usar 2 procesos de memoria con 512MB cada uno.
-### Contenedores de bajo consumo
-#### Bajo consumo de CPU
-```Dockerfile
-FROM ubuntu:latest
-CMD ["sleep", "infinity"]
-```
-* **Base:** ubuntu:latest
-* **Paquete instalado:** Ninguno adicional.
-* **Comando de Ejecución:**: sleep con tiempo infinito, lo que mantiene el contenedor en ejecución sin hacer nada.
-#### Bajo consumo de RAM
-```Dockerfile
-FROM ubuntu:latest
-CMD ["sh", "-c", "while :; do echo 'bajo consumo'; sleep 60; done"]
-```
-* **Base:** ubuntu:latest
-* **Paquete instalado:** Ninguno adicional.
-* **Comando de Ejecución:**: Un bucle que imprime "bajo consumo" cada 60 segundos, simulando baja actividad.
+### Alto consumo de RAM
+#### Archivo
+```Python
+# Este script consume mucha RAM creando una lista enorme
+import time
 
+# Crear una lista muy grande en memoria
+big_list = []
+
+# Rellenar la lista con cadenas de texto grandes
+for i in range(1000000):
+    # Cada elemento es una cadena de 1 millón de caracteres
+    big_list.append("X" * 1000000)
+    time.sleep(0.1)  # Agregar un pequeño retraso entre las inserciones
+
+# Mantener el programa en ejecución para que puedas observar el uso de RAM
+time.sleep(3600)  # Espera una hora
+
+```
+#### Dockerfile
+```Dockerfile
+# Dockerfile para alto consumo de RAM
+FROM python:3.9-slim
+
+# Crear un script de Python que consuma bastante memoria
+COPY /Docker/alto_ram.py /Docker/alto_ram.py
+
+# Ejecutar el script y mantener el contenedor corriendo
+CMD ["python", "/Docker/alto_ram.py"]
+```
+### Alto consumo de CPU
+#### Archivo
+```Python
+# Este script consume mucha CPU realizando cálculos intensivos
+import time
+import math
+for i in range(1000000):
+    math.sqrt(12345)
+    time.sleep(0.1)
+```
+#### Dockerfile
+```Dockerfile
+# Dockerfile para alto consumo de CPU
+FROM python:3.9-slim
+
+# Copiar el script de Python al contenedor
+COPY /Docker/alto_cpu.py /Docker/alto_cpu.py
+
+# Ejecutar el script y mantener el contenedor corriendo
+CMD ["python", "/Docker/alto_cpu.py"]
+```
+### Bajo consumo de RAM
+#### Archivo
+```Python
+import time
+
+# Este script realiza cálculos simples de manera continua
+
+
+def simple_calculations():
+    result = 0
+    for i in range(100000):
+        result += i * i  # Realiza una operación matemática simple
+    return result
+
+
+# Ejecuta los cálculos en un bucle
+while True:
+    result = simple_calculations()
+    print(f"Resultado: {result}")
+    time.sleep(1)  # Espera 1 segundo antes de realizar la siguiente iteración
+
+```
+#### Dockerfile
+```Dockerfile
+# Dockerfile para bajo consumo de RAM
+FROM python:3.9-slim
+
+# Crear un script de Python que no consuma mucha RAM
+COPY /Docker/bajo_ram.py /Docker/bajo_ram.py
+
+# Ejecutar el script y mantener el contenedor corriendo
+CMD ["python", "/Docker/bajo_ram.py"]
+```
+### Bajo consumo de CPU
+#### Archivo
+```Python
+# Script de bajo consumo usando Flask
+from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0')
+
+```
+#### Dockerfile
+```Dockerfile
+# Dockerfile para bajo consumo de CPU
+FROM python:3.9-slim
+
+# Crear un script de Python que no consuma mucha CPU
+COPY /Docker/bajo_cpu.py /Docker/bajo_cpu.py
+
+RUN pip install flask
+# Ejecutar el script y mantener el contenedor corriendo
+CMD ["python", "/Docker/bajo_cpu.py"]
+
+```
 ### Script para automatizar la tarea
 ```bash
 #!/bin/bash
@@ -113,7 +191,7 @@ crear_contenedores() {
         NOMBRE_CONTAIN=$(generar_nombre_contenedor)
         
         # Crear el contenedor
-        echo "Creando contenedor ${NOMBRE_CONTAIN} usando la imagen ${IMAGEN}..."
+        echo "Creando contenedor ${NOMBRE_CONTAIN} usando la imagen ${IMAGEN}..."  >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log
         /usr/bin/docker run -d --name ${NOMBRE_CONTAIN} ${IMAGEN} >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log 2>&1
         
         if [ $? -eq 0 ]; then

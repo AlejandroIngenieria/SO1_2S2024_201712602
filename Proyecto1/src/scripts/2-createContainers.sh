@@ -21,12 +21,11 @@ crear_contenedores() {
         NOMBRE_CONTAIN=$(generar_nombre_contenedor)
         
         # Crear el contenedor
-        echo "Creando contenedor ${NOMBRE_CONTAIN} usando la imagen ${IMAGEN}..."
+        echo "Creando contenedor ${NOMBRE_CONTAIN} usando la imagen ${IMAGEN}..."  >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log
         /usr/bin/docker run -d --name ${NOMBRE_CONTAIN} ${IMAGEN} >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log 2>&1
         
         if [ $? -eq 0 ]; then
             echo "Contenedor ${NOMBRE_CONTAIN} creado exitosamente." >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log
-            docker top ${NOMBRE_CONTAIN} >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log 2>&1
         else
             echo "Error al crear el contenedor ${NOMBRE_CONTAIN}." >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log
         fi
