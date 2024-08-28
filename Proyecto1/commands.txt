@@ -1,7 +1,0 @@
-Eliminar todos los contenedores en docker
-
-docker rm -f $(docker ps -a -q)
-
-Eliminar todas las imagenes de docker
-
-docker rmi -f $(docker images -q)

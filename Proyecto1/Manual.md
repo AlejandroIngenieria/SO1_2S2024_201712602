@@ -210,15 +210,22 @@ crear_contenedores
 ### Logs del script
 ![alt text](<imgs/3. script.png>)
 
-## Comando para detener contenedores
+### Comando para detener contenedores creados por el script
 ```bash
 docker stop $(docker ps --filter "ancestor=bajo_ram" -q) $(docker ps --filter "ancestor=alto_ram" -q) $(docker ps --filter "ancestor=alto_cpu" -q) $(docker ps --filter "ancestor=bajo_cpu" -q)
 ```
-## Comando para eliminar contenedores
+### Comando para eliminar contenedores creados por el script
 ```bash
 docker rm $(docker ps -a --filter "ancestor=bajo_ram" -q) $(docker ps -a --filter "ancestor=alto_ram" -q) $(docker ps -a --filter "ancestor=alto_cpu" -q) $(docker ps -a --filter "ancestor=bajo_cpu" -q)
 ```
-
+### Comando para eliminar todos los contenedores en docker
+```bash
+docker rm -f $(docker ps -a -q)
+```
+### Comando para eliminar todas las imagenes de docker
+```bash
+docker rmi -f $(docker images -q)
+```
 ## Configurar Cron Job
 ```bash
 crontab -e
