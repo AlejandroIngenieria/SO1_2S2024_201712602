@@ -91,7 +91,7 @@ static int sysinfo_show(struct seq_file *m, void *v)
     seq_printf(m, "\"RAM total\": %lu,\n", totalram);
     seq_printf(m, "\"RAM utilizada\": %lu,\n", usedram);
     seq_printf(m, "\"RAM disponible\": %lu,\n", freeram);
-    seq_printf(m, "\"Procesos relacionados con Docker\": [\n");
+    seq_printf(m, "\"Docker\": [\n");
 
     // Iteramos sobre los procesos
     for_each_process(task)
