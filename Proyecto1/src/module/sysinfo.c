@@ -19,7 +19,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Josue Alejandro Perez Benito");
-MODULE_DESCRIPTION("Modulo para leer informacion de memoria y procesos de docker");
+MODULE_DESCRIPTION("Modulo para leer informacion de memoria y procesos relacionados con docker");
 MODULE_VERSION("1.0");
 
 #define PROC_NAME "sysinfo_201712602"
@@ -91,7 +91,7 @@ static int sysinfo_show(struct seq_file *m, void *v)
     seq_printf(m, "\"RAM total\": %lu,\n", totalram);
     seq_printf(m, "\"RAM utilizada\": %lu,\n", usedram);
     seq_printf(m, "\"RAM disponible\": %lu,\n", freeram);
-    seq_printf(m, "\"Docker\": [\n");
+    seq_printf(m, "\"Processes\": [\n");
 
     // Iteramos sobre los procesos
     for_each_process(task)
@@ -130,8 +130,8 @@ static int sysinfo_show(struct seq_file *m, void *v)
             seq_printf(m, "    \"Cmdline\": \"%s\",\n", cmdline ? cmdline : "N/A");
             seq_printf(m, "    \"Vsz\": %lu,\n", vsz);
             seq_printf(m, "    \"Rss\": %lu,\n", rss);
-            seq_printf(m, "    \"MemoryUsage\": %lu.%02lu,\n", mem_usage / 100, mem_usage % 100);
-            seq_printf(m, "    \"CPUUsage\": %lu.%02lu\n", cpu_usage / 100, cpu_usage % 100);
+            seq_printf(m, "    \"Memory_Usage\": %lu.%02lu,\n", mem_usage / 100, mem_usage % 100);
+            seq_printf(m, "    \"CPU_Usage\": %lu.%02lu\n", cpu_usage / 100, cpu_usage % 100);
             seq_printf(m, "  }");
 
             if (cmdline)
