@@ -475,3 +475,78 @@ sudo rmmod nombre_del_modulo
 
 # 3. Servicio de Rust
 # 4. Administrador de logs
+Para el desarrollo del administrador de los logs del proyecto usamos un entorno virtual con python.
+```bash
+python3 -m venv env         # creamos el entorno virtual
+source env/bin/activate     # activamos el entorno virtual
+```
+
+Para el desarrollo de las estructuras usamos los siguientes modelos
+```python
+class LogProcess(BaseModel):
+    pid: int
+    name: str
+    vsz: int
+    rss: int
+    memory_usage: float
+    cpu_usage: float
+    cmdline: str
+
+
+class LogSystem(BaseModel):
+    total_ram: int
+    used_ram: int
+    free_ram: int
+    processes: List[LogProcess]
+    timestamp: str
+```
+
+Para el desarrollo de nuestro adminstrador de logs usamos [fastapi]
+
+[fastapi]:https://fastapi.tiangolo.com/
+
+```bash
+pip install "fastapi[standard]"
+```
+
+Nuestra API es la siguiente:
+```python
+from fastapi import FastAPI  # type: ignore
+import os
+import json
+from typing import List
+from models.models import LogSystem
+
+app = FastAPI()
+
+
+@app.get("/")
+def read_root():
+    return {"Logs-manager" : "Working"}
+
+
+@app.post("/logs")
+def get_logs(logs: LogSystem):
+    logs_file = 'logs/logs.json'
+
+    # Checamos si existe el archivo logs.json
+    if os.path.exists(logs_file):
+        # Leemos el archivo logs.json
+        with open(logs_file, 'r') as file:
+            existing_logs = json.load(file)
+    else:
+        # Sino existe, creamos una lista vacía
+        existing_logs = []
+
+    # Agregamos el nuevo log a la lista existente
+    new_log = logs.dict()
+    existing_logs.append(new_log)
+
+    # Escribimos la lista de logs en el archivo logs.json
+    with open(logs_file, 'w') as file:
+        json.dump(existing_logs, file, indent=4)
+
+    return {"received": True}
+
+
+```
