@@ -9,7 +9,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"Logs-manager" : "Working"}
+    return {"Logs-manager": "Working"}
 
 
 @app.post("/logs")
@@ -34,4 +34,3 @@ def get_logs(logs: LogSystem):
         json.dump(existing_logs, file, indent=4)
 
     return {"received": True}
-

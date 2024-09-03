@@ -1,4 +1,4 @@
-from pydantic import BaseModel # type: ignore
+from pydantic import BaseModel  # type: ignore
 from typing import List
 
 
@@ -16,5 +16,5 @@ class LogSystem(BaseModel):
     total_ram: int
     used_ram: int
     free_ram: int
-    processes: List[LogProcess]
     timestamp: str
+    processes: List[LogProcess]

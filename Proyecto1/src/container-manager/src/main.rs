@@ -1,7 +1,10 @@
+use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, Read};
 use std::path::Path;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /* -------------------------------------------------------------------------- */
 /*                                 ESTRUCTURAS                                */
@@ -20,7 +23,7 @@ struct SystemInfo {
 }
 
 // Informacion de procesos relacionados con Docker
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 struct Process {
     #[serde(rename = "PID")]
     pid: u32,
@@ -113,6 +116,13 @@ fn kill_container(id: &str) -> std::process::Output {
     output
 }
 
+// Obtener el timestamp actual en formato RFC3339
+fn get_current_timestamp() -> String {
+    let start = SystemTime::now();
+    let datetime = chrono::Utc::now();
+    datetime.to_rfc3339()
+}
+
 /* -------------------------------------------------------------------------- */
 /*                                 ANALIZADOR                                 */
 /* -------------------------------------------------------------------------- */
@@ -155,6 +165,7 @@ fn analyzer(system_info: SystemInfo) {
 
     // Mantener los 2 primeros como alto consumo y los últimos 3 como bajo consumo
     let mut log_proc_list: Vec<LogProcess> = Vec::new();
+    let mut remaining_processes: Vec<Process> = Vec::new();
 
     // Verificamos que hay al menos 5 procesos (2 de alto y 3 de bajo)
     if processes_list.len() < 5 {
@@ -178,6 +189,7 @@ fn analyzer(system_info: SystemInfo) {
             process.cpu_usage,
             process.memory_usage
         );
+        remaining_processes.push(process.clone());
     }
 
     println!("------------------------------ BAJO CONSUMO ------------------------------\n");
@@ -190,6 +202,7 @@ fn analyzer(system_info: SystemInfo) {
             process.cpu_usage,
             process.memory_usage
         );
+        remaining_processes.push(process.clone());
     }
 
     // Si hay más procesos en la lista intermedia, debemos eliminarlos
@@ -206,6 +219,51 @@ fn analyzer(system_info: SystemInfo) {
 
         // Matamos el contenedor
         let _output = kill_container(&process.get_container_id());
+    }
+
+    // Preparar la estructura para el POST
+    let mut json_data: HashMap<String, serde_json::Value> = HashMap::new();
+    json_data.insert(
+        "total_ram".to_string(),
+        serde_json::json!(system_info.ram_total),
+    );
+    json_data.insert(
+        "used_ram".to_string(),
+        serde_json::json!(system_info.ram_used),
+    );
+    json_data.insert(
+        "free_ram".to_string(),
+        serde_json::json!(system_info.ram_available),
+    );
+    json_data.insert(
+        "timestamp".to_string(),
+        serde_json::json!(get_current_timestamp()),
+    );
+
+    let mut process_list = Vec::new();
+    for process in remaining_processes {
+        process_list.push(serde_json::json!({
+            "pid": process.pid,
+            "name": process.name,
+            "vsz": process.vsz,
+            "rss": process.rss,
+            "memory_usage": process.memory_usage,
+            "cpu_usage": process.cpu_usage,
+            "cmdline": process.cmd_line
+        }));
+    }
+    json_data.insert("processes".to_string(), serde_json::json!(process_list));
+
+    // Hacer el POST
+    let client = Client::new();
+    let res = client
+        .post("http://127.0.0.1:8000/logs")
+        .json(&json_data)
+        .send();
+
+    match res {
+        Ok(response) => println!("POST request successful: {:?}", response),
+        Err(e) => println!("POST request failed: {:?}", e),
     }
 
     println!("------------------------- CONTENEDORES ELIMINADOS ------------------------\n");

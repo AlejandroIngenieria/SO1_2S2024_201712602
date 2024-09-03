@@ -1,0 +1,11 @@
+/home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/container-manager/target/debug/deps/libtower_layer-55167ad84f5cb165.rmeta: /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/lib.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/identity.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/layer_fn.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/stack.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/tuple.rs
+
+/home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/container-manager/target/debug/deps/libtower_layer-55167ad84f5cb165.rlib: /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/lib.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/identity.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/layer_fn.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/stack.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/tuple.rs
+
+/home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/container-manager/target/debug/deps/tower_layer-55167ad84f5cb165.d: /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/lib.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/identity.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/layer_fn.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/stack.rs /home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/tuple.rs
+
+/home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/lib.rs:
+/home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/identity.rs:
+/home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/layer_fn.rs:
+/home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/stack.rs:
+/home/josue/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tower-layer-0.3.3/src/tuple.rs:
