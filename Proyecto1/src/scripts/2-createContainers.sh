@@ -4,7 +4,7 @@
 IMAGENES=("alto_cpu" "alto_ram" "bajo_cpu" "bajo_ram")
 
 # Número de contenedores a crear
-NUM_CONTENEDORES=7
+NUM_CONTENEDORES=10
 
 # Función para generar un nombre aleatorio para el contenedor
 generar_nombre_contenedor() {

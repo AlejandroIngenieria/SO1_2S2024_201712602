@@ -1,10 +1,16 @@
+use ctrlc;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, Read};
 use std::path::Path;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::process;
+use std::process::{Child, Command};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
 
 /* -------------------------------------------------------------------------- */
 /*                                 ESTRUCTURAS                                */
@@ -118,9 +124,7 @@ fn kill_container(id: &str) -> std::process::Output {
 
 // Obtener el timestamp actual en formato RFC3339
 fn get_current_timestamp() -> String {
-    let start = SystemTime::now();
-    let datetime = chrono::Utc::now();
-    datetime.to_rfc3339()
+    chrono::Utc::now().to_rfc3339()
 }
 
 /* -------------------------------------------------------------------------- */
@@ -205,7 +209,9 @@ fn analyzer(system_info: SystemInfo) {
         remaining_processes.push(process.clone());
     }
 
-    // Si hay más procesos en la lista intermedia, debemos eliminarlos
+    /* ------------------------- ELIMINACION DE PROCESOS ------------------------ */
+
+    let mut handles = vec![];
     for process in middle {
         let log_process = LogProcess {
             pid: process.pid,
@@ -217,11 +223,19 @@ fn analyzer(system_info: SystemInfo) {
 
         log_proc_list.push(log_process.clone());
 
-        // Matamos el contenedor
-        let _output = kill_container(&process.get_container_id());
+        let container_id = process.get_container_id().to_string();
+        let handle = thread::spawn(move || {
+            let _output = kill_container(&container_id);
+        });
+        handles.push(handle);
     }
 
-    // Preparar la estructura para el POST
+    for handle in handles {
+        handle.join().expect("Thread failed");
+    }
+
+    /* ---------------------------------- POST ---------------------------------- */
+
     let mut json_data: HashMap<String, serde_json::Value> = HashMap::new();
     json_data.insert(
         "total_ram".to_string(),
@@ -279,7 +293,7 @@ fn analyzer(system_info: SystemInfo) {
     }
 
     println!("--------------------------------------------------------------------------");
-    println!("--------------------------------------------------------------------------");
+    println!("----------------------------------- FIN ----------------------------------");
     println!("--------------------------------------------------------------------------");
 }
 
@@ -303,7 +317,54 @@ fn parse_proc_to_struct(json_str: &str) -> Result<SystemInfo, serde_json::Error>
 }
 
 fn main() {
-    loop {
+    // Bandera para controlar el ciclo del bucle
+    let running = Arc::new(AtomicBool::new(true));
+    let running_clone = Arc::clone(&running);
+
+    // Ejecutar el script al iniciar el servicio
+    let mut script_process: Child = Command::new("/bin/bash")
+        .arg(
+            "/home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/scripts/3-cronjob.sh",
+        )
+        .spawn()
+        .expect("Failed to start script");
+
+    // Manejar la señal SIGINT (Ctrl+C)
+    ctrlc::set_handler(move || {
+        println!("Ctrl+C Detectado!!!!!");
+        running_clone.store(false, Ordering::Relaxed);
+
+        // Crear un cliente HTTP para hacer las solicitudes GET
+        let client = Client::new();
+
+        // Detener el script al finalizar el servicio
+        println!("Deteniendo el cronjob...");
+        script_process.kill().expect("Failed to stop script");
+
+        // Hacer GET a /graph
+        match client.get("http://127.0.0.1:8000/graph").send() {
+            Ok(response) => println!("GET /graph response: {:?}", response),
+            Err(e) => println!("GET /graph request failed: {:?}", e),
+        }
+
+        // Hacer GET a /view
+        match client.get("http://127.0.0.1:8000/view").send() {
+            Ok(response) => println!("GET /view response: {:?}", response),
+            Err(e) => println!("GET /view request failed: {:?}", e),
+        }
+
+        // Detener el servicio de rust
+        println!("Deteniendo el servicio de rust");
+        process::exit(0); // Finaliza el programa
+    })
+    .expect("Error setting Ctrl-C handler");
+
+    // Procesar información mientras el flag `running` es verdadero
+    while running.load(Ordering::Relaxed) {
+        
+        // Esperar 10 segundos
+        thread::sleep(Duration::from_secs(10));
+
         let system_info: Result<SystemInfo, _>;
 
         let json_str = read_proc_file("sysinfo_201712602").unwrap();
@@ -316,7 +377,5 @@ fn main() {
             }
             Err(e) => println!("Failed to parse JSON: {}", e),
         }
-
-        std::thread::sleep(std::time::Duration::from_secs(10));
     }
 }

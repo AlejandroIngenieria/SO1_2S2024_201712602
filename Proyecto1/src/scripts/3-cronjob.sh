@@ -1,6 +1,6 @@
 #!/bin/bash
 
 while true; do
-  ./2-createContainers.sh
-  sleep 30
+  /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/scripts/2-createContainers.sh
+  sleep 25
 done
