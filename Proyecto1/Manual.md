@@ -22,6 +22,14 @@
 **Fecha de Entrega:** 08 de septiembre del 2024
 
 ---
+# Manual tecnico
+1. [**Script Creador de Contenedores**](#1-script-creador-de-contenedores)
+2. [**Módulo de Kernel**](#2-módulo-de-kernel)
+3. [**Servicio de Rust**](#3-servicio-de-rust)
+4. [**Administrador de logs**](#4-administrador-de-logs)
+
+---
+
 <!-- ----------------------------------------------------------------------- -->
 <!--                     SCRIPT CREADOR DE CONTENEDORES                      -->
 <!-- ----------------------------------------------------------------------- -->
@@ -226,7 +234,8 @@ docker rm -f $(docker ps -a -q)
 ```bash
 docker rmi -f $(docker images -q)
 ```
-## Configurar Cron Job
+## Configurar Cron Job 
+### Opcion 1
 ```bash
 crontab -e
 ```
@@ -235,10 +244,21 @@ crontab -e
 * * * * * /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/scripts/2-createContainers.sh
 * * * * * sleep 30; /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/scripts/2-createContainers.sh
 ```
+### Opcion 2
+```bash
+#!/bin/bash
+
+while true; do
+  src/scripts/2-createContainers.sh
+  sleep 30
+done
+
+```
+
 #### Verificando la creacion de los contenedores
 ![alt text](<imgs/4. containers.png>)
 
-# 2. Módulos de Kernel
+# 2. Módulo de Kernel
 ## Creacion del modulo en C
 ```c
 #include <linux/module.h>
@@ -454,3 +474,4 @@ sudo rmmod nombre_del_modulo
 ```
 
 # 3. Servicio de Rust
+# 4. Administrador de logs

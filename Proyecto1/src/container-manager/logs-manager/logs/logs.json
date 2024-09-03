@@ -1,0 +1,28 @@
+[
+    {
+        "total_ram": 16069928,
+        "used_ram": 11747740,
+        "free_ram": 4322188,
+        "processes": [
+            {
+                "pid": 34943,
+                "name": "containerd-shim",
+                "vsz": 1237912,
+                "rss": 12640,
+                "memory_usage": 0.07,
+                "cpu_usage": 0.06,
+                "cmdline": "/usr/bin/containerd-shim-runc-v2 -namespace moby -id c1b38933635d7858f4d82a774535af172e86557857d9127b13a10f15eae13959 -address /run/containerd/containerd.sock"
+            },
+            {
+                "pid": 35016,
+                "name": "containerd-shim",
+                "vsz": 1237912,
+                "rss": 13440,
+                "memory_usage": 0.08,
+                "cpu_usage": 0.06,
+                "cmdline": "/usr/bin/containerd-shim-runc-v2 -namespace moby -id 0a36ece655728743bd009aee8b72a48e7374dfc23336e45a534e074d333e5038 -address /run/containerd/containerd.sock"
+            }
+        ],
+        "timestamp": "2024-09-03T12:00:00Z"
+    }
+]

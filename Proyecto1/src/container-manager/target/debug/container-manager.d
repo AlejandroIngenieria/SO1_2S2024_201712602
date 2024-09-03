@@ -1,0 +1,1 @@
+/home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/container-manager/target/debug/container-manager: /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/container-manager/src/main.rs
