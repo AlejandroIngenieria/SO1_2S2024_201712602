@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::{self, Read};
 use std::path::Path;
 use std::process;
-use std::process::{Child, Command};
+use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -144,8 +144,20 @@ fn analyzer(system_info: SystemInfo) {
     println!("                     PROCESOS RELACIONADOS CON DOCKER                     ");
     println!("--------------------------------------------------------------------------\n\n");
 
+    // Filtrar el proceso containerd-shim que quieres ignorar
+    let filtered_processes: Vec<Process> = system_info
+        .processes
+        .into_iter()
+        .filter(|p| {
+            !(p.pid == 6658
+                && p.name == "containerd-shim"
+                && p.cmd_line
+                    .contains("f0629ea40571ef3dc5b576afb67f91acc0c0bd4268d806df886fcc22be520bfb"))
+        })
+        .collect();
+
     // Guardamos los procesos en una lista
-    let mut processes_list: Vec<Process> = system_info.processes;
+    let mut processes_list: Vec<Process> = filtered_processes;
 
     // 1. Ordenamos primero por uso de CPU (de mayor a menor)
     processes_list.sort_by(|a, b| {
@@ -271,13 +283,13 @@ fn analyzer(system_info: SystemInfo) {
     // Hacer el POST
     let client = Client::new();
     let res = client
-        .post("http://127.0.0.1:8000/logs")
+        .post("http://0.0.0.0:8000/logs")
         .json(&json_data)
         .send();
 
     match res {
-        Ok(response) => println!("POST request successful: {:?}", response),
-        Err(e) => println!("POST request failed: {:?}", e),
+        Ok(response) => println!(">>>>>>>>>>>> POST request successful: {:?}", response),
+        Err(e) => println!(">>>>>>>>>>>> POST request failed: {:?}", e),
     }
 
     println!("------------------------- CONTENEDORES ELIMINADOS ------------------------\n");
@@ -317,6 +329,19 @@ fn parse_proc_to_struct(json_str: &str) -> Result<SystemInfo, serde_json::Error>
 }
 
 fn main() {
+    // Ejecutar el archivo docker-compose.yaml
+    println!("Iniciando servicios de Docker Compose...");
+    let docker_compose_path = "/home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/container-manager/logs-manager/docker-compose.yaml";
+    let mut docker_compose = Command::new("docker")
+        .arg("compose")
+        .arg("-f")
+        .arg(docker_compose_path)
+        .arg("up")
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()
+        .expect("Failed to start docker-compose");
+
     // Bandera para controlar el ciclo del bucle
     let running = Arc::new(AtomicBool::new(true));
     let running_clone = Arc::clone(&running);
@@ -342,15 +367,9 @@ fn main() {
         script_process.kill().expect("Failed to stop script");
 
         // Hacer GET a /graph
-        match client.get("http://127.0.0.1:8000/graph").send() {
+        match client.get("http://0.0.0.0:8000/graph").send() {
             Ok(response) => println!("GET /graph response: {:?}", response),
             Err(e) => println!("GET /graph request failed: {:?}", e),
-        }
-
-        // Hacer GET a /view
-        match client.get("http://127.0.0.1:8000/view").send() {
-            Ok(response) => println!("GET /view response: {:?}", response),
-            Err(e) => println!("GET /view request failed: {:?}", e),
         }
 
         // Detener el servicio de rust
@@ -361,7 +380,27 @@ fn main() {
 
     // Procesar información mientras el flag `running` es verdadero
     while running.load(Ordering::Relaxed) {
-        
+        match docker_compose.try_wait() {
+            Ok(Some(status)) => {
+                println!("docker-compose exited with: {}", status);
+                // Reiniciar si docker-compose se detuvo inesperadamente
+                docker_compose = Command::new("docker")
+                    .arg("compose")
+                    .arg("-f")
+                    .arg(docker_compose_path)
+                    .arg("up")
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .spawn()
+                    .expect("Failed to restart docker-compose");
+            }
+            Ok(None) => {
+                // docker-compose sigue corriendo
+            }
+            Err(e) => {
+                println!("Failed to check docker-compose status: {}", e);
+            }
+        }
         // Esperar 10 segundos
         thread::sleep(Duration::from_secs(10));
 

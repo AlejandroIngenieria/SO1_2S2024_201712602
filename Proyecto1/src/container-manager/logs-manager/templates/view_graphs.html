@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Graphs</title>
+</head>
+<body>
+    <h1>Generated Graphs</h1>
+
+    {% if ram_graph %}
+        <h2>RAM Usage</h2>
+        <img src="{{ ram_graph }}" alt="RAM Usage Graph">
+    {% else %}
+        <p>RAM Usage Graph not available.</p>
+    {% endif %}
+
+    {% for graph in process_graphs %}
+        <h2>Process Usage</h2>
+        <img src="{{ graph }}" alt="Process Usage Graph">
+    {% endfor %}
+</body>
+</html>

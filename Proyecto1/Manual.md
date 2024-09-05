@@ -492,6 +492,7 @@ ctrlc = "3.2"
 ```
 
 Servicio en rust
+
 ```rust
 use ctrlc;
 use reqwest::blocking::Client;
@@ -501,7 +502,7 @@ use std::fs::File;
 use std::io::{self, Read};
 use std::path::Path;
 use std::process;
-use std::process::{Child, Command};
+use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -639,8 +640,20 @@ fn analyzer(system_info: SystemInfo) {
     println!("                     PROCESOS RELACIONADOS CON DOCKER                     ");
     println!("--------------------------------------------------------------------------\n\n");
 
+    // Filtrar el proceso containerd-shim que quieres ignorar
+    let filtered_processes: Vec<Process> = system_info
+        .processes
+        .into_iter()
+        .filter(|p| {
+            !(p.pid == 6658
+                && p.name == "containerd-shim"
+                && p.cmd_line
+                    .contains("f0629ea40571ef3dc5b576afb67f91acc0c0bd4268d806df886fcc22be520bfb"))
+        })
+        .collect();
+
     // Guardamos los procesos en una lista
-    let mut processes_list: Vec<Process> = system_info.processes;
+    let mut processes_list: Vec<Process> = filtered_processes;
 
     // 1. Ordenamos primero por uso de CPU (de mayor a menor)
     processes_list.sort_by(|a, b| {
@@ -766,13 +779,13 @@ fn analyzer(system_info: SystemInfo) {
     // Hacer el POST
     let client = Client::new();
     let res = client
-        .post("http://127.0.0.1:8000/logs")
+        .post("http://0.0.0.0:8000/logs")
         .json(&json_data)
         .send();
 
     match res {
-        Ok(response) => println!("POST request successful: {:?}", response),
-        Err(e) => println!("POST request failed: {:?}", e),
+        Ok(response) => println!(">>>>>>>>>>>> POST request successful: {:?}", response),
+        Err(e) => println!(">>>>>>>>>>>> POST request failed: {:?}", e),
     }
 
     println!("------------------------- CONTENEDORES ELIMINADOS ------------------------\n");
@@ -812,6 +825,19 @@ fn parse_proc_to_struct(json_str: &str) -> Result<SystemInfo, serde_json::Error>
 }
 
 fn main() {
+    // Ejecutar el archivo docker-compose.yaml
+    println!("Iniciando servicios de Docker Compose...");
+    let docker_compose_path = "/home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/container-manager/logs-manager/docker-compose.yaml";
+    let mut docker_compose = Command::new("docker")
+        .arg("compose")
+        .arg("-f")
+        .arg(docker_compose_path)
+        .arg("up")
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()
+        .expect("Failed to start docker-compose");
+
     // Bandera para controlar el ciclo del bucle
     let running = Arc::new(AtomicBool::new(true));
     let running_clone = Arc::clone(&running);
@@ -837,15 +863,9 @@ fn main() {
         script_process.kill().expect("Failed to stop script");
 
         // Hacer GET a /graph
-        match client.get("http://127.0.0.1:8000/graph").send() {
+        match client.get("http://0.0.0.0:8000/graph").send() {
             Ok(response) => println!("GET /graph response: {:?}", response),
             Err(e) => println!("GET /graph request failed: {:?}", e),
-        }
-
-        // Hacer GET a /view
-        match client.get("http://127.0.0.1:8000/view").send() {
-            Ok(response) => println!("GET /view response: {:?}", response),
-            Err(e) => println!("GET /view request failed: {:?}", e),
         }
 
         // Detener el servicio de rust
@@ -856,7 +876,27 @@ fn main() {
 
     // Procesar información mientras el flag `running` es verdadero
     while running.load(Ordering::Relaxed) {
-        
+        match docker_compose.try_wait() {
+            Ok(Some(status)) => {
+                println!("docker-compose exited with: {}", status);
+                // Reiniciar si docker-compose se detuvo inesperadamente
+                docker_compose = Command::new("docker")
+                    .arg("compose")
+                    .arg("-f")
+                    .arg(docker_compose_path)
+                    .arg("up")
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .spawn()
+                    .expect("Failed to restart docker-compose");
+            }
+            Ok(None) => {
+                // docker-compose sigue corriendo
+            }
+            Err(e) => {
+                println!("Failed to check docker-compose status: {}", e);
+            }
+        }
         // Esperar 10 segundos
         thread::sleep(Duration::from_secs(10));
 
@@ -875,6 +915,11 @@ fn main() {
     }
 }
 
+```
+
+Comando para ejecutar el servicio de Rust
+```bash
+cargo run
 ```
 
 # 4. Administrador de logs
@@ -922,17 +967,20 @@ class LogSystem(BaseModel):
 
 Nuestra API es la siguiente:
 ```python
-from fastapi import FastAPI                     #type:ignore
 from fastapi.responses import HTMLResponse      # type:ignore
 from fastapi.staticfiles import StaticFiles     # type:ignore
-import os
-import json
-from typing import List
+import matplotlib.pyplot as plt                 # type:ignore
+from fastapi import FastAPI, Request            # type:ignore
+from fastapi.templating import Jinja2Templates  # type:ignore
+from fastapi.responses import HTMLResponse      # type:ignore
 from models.models import LogSystem
-import matplotlib.pyplot as plt #type:ignore
+from typing import List
+import json
+import os
 
 app = FastAPI()
 
+templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
 def read_root():
@@ -974,7 +1022,6 @@ def clear_logs():
     return {"cleared": True}
 
 
-
 @app.get("/graph")
 def create_graphs():
     logs_file = 'logs/logs.json'
@@ -985,39 +1032,68 @@ def create_graphs():
     with open(logs_file, 'r') as file:
         logs = json.load(file)
 
-    # Plot RAM usage over time
+    # Gráfico del uso de RAM a lo largo del tiempo
     timestamps = [log["timestamp"] for log in logs]
     total_ram = [log["total_ram"] for log in logs]
     used_ram = [log["used_ram"] for log in logs]
     free_ram = [log["free_ram"] for log in logs]
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(timestamps, total_ram, label="Total RAM")
-    plt.plot(timestamps, used_ram, label="Used RAM")
-    plt.plot(timestamps, free_ram, label="Free RAM")
-    plt.xlabel("Timestamp")
-    plt.ylabel("RAM (bytes)")
-    plt.title("RAM Usage Over Time")
+    plt.figure(figsize=(12, 6))
+    plt.plot(timestamps, total_ram, label="Total RAM",
+             color="blue", linewidth=2)
+    plt.plot(timestamps, used_ram, label="Used RAM",
+             color="red", linestyle="--", linewidth=2)
+    plt.plot(timestamps, free_ram, label="Free RAM",
+             color="green", linestyle=":", linewidth=2)
+    plt.xlabel("Timestamp", fontsize=12)
+    plt.ylabel("RAM (bytes)", fontsize=12)
+    plt.title("RAM Usage Over Time", fontsize=14)
     plt.legend()
     plt.xticks(rotation=45)
+    plt.grid(True)
     plt.tight_layout()
     plt.savefig('logs/ram_usage.png')
     plt.close()
 
-    # Plot CPU and memory usage for each process
+    # Gráficos para los procesos individuales
     for log in logs:
         pids = [process["pid"] for process in log["processes"]]
+        names = [process["name"] for process in log["processes"]]
+        vsz = [process["vsz"]
+               for process in log["processes"]]  # Tamaño de memoria virtual
+        rss = [process["rss"]
+               for process in log["processes"]]  # Tamaño de memoria residente
         cpu_usage = [process["cpu_usage"] for process in log["processes"]]
         memory_usage = [process["memory_usage"]
                         for process in log["processes"]]
+        cmdline = [process["cmdline"] for process in log["processes"]]
 
-        plt.figure(figsize=(10, 6))
-        plt.bar(pids, cpu_usage, label="CPU Usage (%)")
-        plt.bar(pids, memory_usage, label="Memory Usage (%)", alpha=0.7)
-        plt.xlabel("Process ID")
-        plt.ylabel("Usage")
-        plt.title(f"CPU and Memory Usage for Processes at {log['timestamp']}")
-        plt.legend()
+        # Configuración del gráfico
+        fig, ax1 = plt.subplots(figsize=(12, 8))
+
+        # Gráfico de uso de CPU y memoria en porcentaje
+        bar_width = 0.35
+        index = range(len(pids))
+
+        ax1.bar(index, cpu_usage, bar_width,
+                label="CPU Usage (%)", color='blue', alpha=0.7)
+        ax1.bar([i + bar_width for i in index], memory_usage, bar_width,
+                label="Memory Usage (%)", color='orange', alpha=0.7)
+
+        ax1.set_xlabel('Process ID', fontsize=12)
+        ax1.set_ylabel('Usage (%)', fontsize=12)
+        ax1.set_title(f"Resource Usage for Processes at {log['timestamp']}", fontsize=14)
+        ax1.set_xticks([i + bar_width / 2 for i in index])
+        ax1.set_xticklabels([f"{name} (PID: {pid})" for name, pid in zip(
+            names, pids)], rotation=45, ha="right", fontsize=10)
+        ax1.legend()
+
+        # Anotaciones de detalles adicionales
+        for i in index:
+            ax1.text(
+                i, cpu_usage[i] + 0.5, f"VSZ: {vsz[i]} KB", ha="center", va="bottom", fontsize=9)
+            ax1.text(i + bar_width, memory_usage[i] + 0.5, f"RSS: {rss[i]} KB", ha="center", va="bottom", fontsize=9)
+
         plt.tight_layout()
         plt.savefig(
             f'logs/process_usage_{log["timestamp"].replace(":", "-")}.png')
@@ -1026,32 +1102,63 @@ def create_graphs():
     return {"graphs_created": True}
 
 
+
 # Serve the logs directory as static files so that images can be accessed directly
 app.mount("/logs", StaticFiles(directory="logs"), name="logs")
 
 
 @app.get("/view", response_class=HTMLResponse)
-def view_graphs():
-    ram_graph = 'logs/ram_usage.png'
+def view_graphs(request: Request):
+    # Asume que 'logs' está en la raíz del directorio de trabajo del contenedor
+    ram_graph = '/logs/ram_usage.png' if os.path.exists(
+        '/code/logs/ram_usage.png') else None
     process_graphs = [
-        f'logs/{f}' for f in os.listdir('logs') if f.startswith('process_usage_')]
+        f'/logs/{f}' for f in os.listdir('/code/logs') if f.startswith('process_usage_')
+    ]
 
-    # Start building the HTML response
-    html_content = "<html><head><title>Graphs</title></head><body>"
-    html_content += "<h1>Generated Graphs</h1>"
+    return templates.TemplateResponse("view_graphs.html", {"request": request, "ram_graph": ram_graph, "process_graphs": process_graphs})
 
-    if os.path.exists(ram_graph):
-        html_content += f"<h2>RAM Usage</h2><img src='/{
-            ram_graph}' alt='RAM Usage Graph'>"
-
-    for graph in process_graphs:
-        html_content += f"<h2>Process Usage</h2><img src='/{
-            graph}' alt='Process Usage Graph'>"
-
-    html_content += "</body></html>"
-
-    return HTMLResponse(content=html_content)
 ```
 
-## Contenedor de administracion de logs
+### Endpoints
 
+* GET   "/"             Mostrara si el servidor esta funcionando
+* POST  "/logs"         Recibira la informacion en formato json
+* GET   "/clear"        Borrara los logs
+* GET   "/graph"        Creara las graficas
+* GET   "/view"         Interfaz visual de las graficas
+
+## Contenedor de administracion de logs
+### Dockerfile
+
+```Dockerfile
+FROM python:3.9-slim
+
+WORKDIR /code
+
+COPY ./requirements.txt /code/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+COPY ./ /code/
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### docker-compose
+```yaml
+version: '3.8'
+
+services:
+  log_registry:
+    build: ./
+    container_name: log_container
+    ports:
+    - "8000:8000"
+    volumes:
+      - ./logs:/code/logs
+      
+    restart: always
+```
