@@ -10,7 +10,9 @@ use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
+use std::thread::sleep;
 use std::time::Duration;
+use webbrowser;
 
 /* -------------------------------------------------------------------------- */
 /*                                 ESTRUCTURAS                                */
@@ -127,6 +129,7 @@ fn get_current_timestamp() -> String {
     chrono::Utc::now().to_rfc3339()
 }
 
+
 /* -------------------------------------------------------------------------- */
 /*                                 ANALIZADOR                                 */
 /* -------------------------------------------------------------------------- */
@@ -224,7 +227,6 @@ fn analyzer(system_info: SystemInfo) {
 
     let mut handles = vec![];
     for process in middle {
-
         let log_process = LogProcess {
             pid: process.pid,
             container_id: process.get_container_id().to_string(),
@@ -259,6 +261,8 @@ fn analyzer(system_info: SystemInfo) {
     }
 
     /* ---------------------------------- POST ---------------------------------- */
+
+    println!("\n------------------------ GUARDANDO LA INFORMACION ------------------------\n");
 
     let mut json_data: HashMap<String, serde_json::Value> = HashMap::new();
     json_data.insert(
@@ -304,9 +308,9 @@ fn analyzer(system_info: SystemInfo) {
         Err(e) => println!(">>>>>>>>>>>> POST request failed: {:?}", e),
     }
 
-    println!("--------------------------------------------------------------------------");
+    println!("\n\n--------------------------------------------------------------------------");
     println!("----------------------------------- FIN ----------------------------------");
-    println!("--------------------------------------------------------------------------");
+    println!("--------------------------------------------------------------------------\n\n");
 }
 
 // Funcion para leer la informacion del proceso
@@ -328,7 +332,9 @@ fn parse_proc_to_struct(json_str: &str) -> Result<SystemInfo, serde_json::Error>
     Ok(system_info)
 }
 
-fn main() {
+
+fn main(){    
+    
     // Ejecutar el archivo docker-compose.yaml
     println!("Iniciando servicios de Docker Compose...");
     let docker_compose_path = "/home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/src/container-manager/logs-manager/docker-compose.yaml";
@@ -370,7 +376,7 @@ fn main() {
         match client.get("http://0.0.0.0:8000/graph").send() {
             Ok(response) => println!("GET /graph response: {:?}", response),
             Err(e) => println!("GET /graph request failed: {:?}", e),
-        }
+        }        
 
         // Detener el servicio de rust
         println!("Deteniendo el servicio de rust");

@@ -6,6 +6,9 @@ IMAGENES=("alto_cpu" "alto_ram" "bajo_cpu" "bajo_ram")
 # Número de contenedores a crear
 NUM_CONTENEDORES=10
 
+# Ruta del archivo de log
+LOG_FILE="/home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log"
+
 # Función para generar un nombre aleatorio para el contenedor
 generar_nombre_contenedor() {
     cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1
@@ -20,14 +23,12 @@ crear_contenedores() {
         # Generar un nombre aleatorio para el contenedor
         NOMBRE_CONTAIN=$(generar_nombre_contenedor)
         
-        # Crear el contenedor
-        echo "Creando contenedor ${NOMBRE_CONTAIN} usando la imagen ${IMAGEN}..."  >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log
-        /usr/bin/docker run -d --name ${NOMBRE_CONTAIN} ${IMAGEN} >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log 2>&1
-        
+        # Crear el contenedor y capturar la salida
+        OUTPUT=$( /usr/bin/docker run -d --name ${NOMBRE_CONTAIN} ${IMAGEN} 2>&1 )
         if [ $? -eq 0 ]; then
-            echo "Contenedor ${NOMBRE_CONTAIN} creado exitosamente." >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log
+            echo "Contenedor ${NOMBRE_CONTAIN} creado exitosamente." >> $LOG_FILE
         else
-            echo "Error al crear el contenedor ${NOMBRE_CONTAIN}." >> /home/josue/Escritorio/so1_laboratorio/actividades/Proyecto1/log_ejecucion.log
+            echo "Error al crear el contenedor ${NOMBRE_CONTAIN}: $OUTPUT" >> $LOG_FILE
         fi
     done
 }
