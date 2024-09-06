@@ -144,13 +144,12 @@ fn analyzer(system_info: SystemInfo) {
     println!("                     PROCESOS RELACIONADOS CON DOCKER                     ");
     println!("--------------------------------------------------------------------------\n\n");
 
-    // Filtrar el proceso containerd-shim que quieres ignorar
+    // Filtrar el proceso containerd-shim basado solo en cmdline
     let filtered_processes: Vec<Process> = system_info
         .processes
         .into_iter()
         .filter(|p| {
-            !(p.pid == 6658
-                && p.name == "containerd-shim"
+            !(p.name == "containerd-shim"
                 && p.cmd_line
                     .contains("f0629ea40571ef3dc5b576afb67f91acc0c0bd4268d806df886fcc22be520bfb"))
         })
@@ -225,6 +224,7 @@ fn analyzer(system_info: SystemInfo) {
 
     let mut handles = vec![];
     for process in middle {
+
         let log_process = LogProcess {
             pid: process.pid,
             container_id: process.get_container_id().to_string(),
@@ -244,6 +244,18 @@ fn analyzer(system_info: SystemInfo) {
 
     for handle in handles {
         handle.join().expect("Thread failed");
+    }
+
+    println!("------------------------- CONTENEDORES ELIMINADOS ------------------------\n");
+    for process in log_proc_list {
+        println!(
+            "PID: {}, Name: {}, Container ID: {}, CPU Usage: {}, Memory Usage: {}",
+            process.pid,
+            process.name,
+            process.container_id,
+            process.cpu_usage,
+            process.memory_usage
+        );
     }
 
     /* ---------------------------------- POST ---------------------------------- */
@@ -292,18 +304,6 @@ fn analyzer(system_info: SystemInfo) {
         Err(e) => println!(">>>>>>>>>>>> POST request failed: {:?}", e),
     }
 
-    println!("------------------------- CONTENEDORES ELIMINADOS ------------------------\n");
-    for process in log_proc_list {
-        println!(
-            "PID: {}, Name: {}, Container ID: {}, CPU Usage: {}, Memory Usage: {}",
-            process.pid,
-            process.name,
-            process.container_id,
-            process.cpu_usage,
-            process.memory_usage
-        );
-    }
-
     println!("--------------------------------------------------------------------------");
     println!("----------------------------------- FIN ----------------------------------");
     println!("--------------------------------------------------------------------------");
@@ -337,8 +337,8 @@ fn main() {
         .arg("-f")
         .arg(docker_compose_path)
         .arg("up")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .spawn()
         .expect("Failed to start docker-compose");
 

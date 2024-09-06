@@ -1162,3 +1162,15 @@ services:
       
     restart: always
 ```
+
+### Comandos
+
+```bash
+docker compose up --build   #Con este comando construimos e iniciamos el contenedor
+docker compose build        #Con este comando unicamente construimos el contenedor
+docker compose up           #Con este comando unicamente iniciamos el contenedor
+docker compose down         #Con este comando removemos los procesos y contenedores creados
+docker images               #Con este comando vemos las imagenes de Docker con las que contamos en nuestro sistema
+docker ps                   #Con este comando vemos los contenedores en ejecucion
+docker ps -a                #Con este comando vemos todos los contenedores
+```
