@@ -7,6 +7,9 @@ import (
 	"net/http"
 )
 
+/* -------------------------------------------------------------------------- */
+/*                        Estructura de los estudiantes                       */
+/* -------------------------------------------------------------------------- */
 type Student struct {
 	Student   string `json:"student"`
 	Age       int    `json:"age"`
@@ -14,6 +17,10 @@ type Student struct {
 	Discipline int   `json:"discipline"`
 }
 
+
+/* -------------------------------------------------------------------------- */
+/*                               Peticiones POST                              */
+/* -------------------------------------------------------------------------- */
 func handler(w http.ResponseWriter, r *http.Request) {
 	var students []Student
 	err := json.NewDecoder(r.Body).Decode(&students)
@@ -23,10 +30,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, student := range students {
-		fmt.Fprintf(w, "Student: %s, Age: %d, Faculty: %s, Discipline: %d\n", student.Student, student.Age, student.Faculty, student.Discipline)
+		fmt.Fprintf(w, "- Student: %s, Age: %d, Faculty: %s, Discipline: %d\n\n", student.Student, student.Age, student.Faculty, student.Discipline)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                  Main                                      */
+/* -------------------------------------------------------------------------- */
 func main() {
 	http.HandleFunc("/", handler)
 	log.Println("Server started on :8080")
