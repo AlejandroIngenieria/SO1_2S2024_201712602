@@ -41,7 +41,7 @@ locust -f main.py
 
 ![alt text](<imgs/3 - configuracion de locust.png>)
 
-> ## Deployment
+> ## k8s
 ```bash
 kubectl apply -f [archivo.yaml]
 ```
@@ -49,19 +49,47 @@ kubectl apply -f [archivo.yaml]
 - [service.yaml](k8s/service.yaml)
 - [ingress.yaml](k8s/ingress.yaml)
 
+### Para que funcione el ingress
+```bash
+kubectl create ns nginx-ingress
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx 
+helm repo update 
+helm install nginx-ingress ingress-nginx/ingress-nginx -n nginx-ingress
+
+kubectl get services -n nginx-ingress #Con este comando obtenemos el host para el ingress
+```
+
+### Ingreso de los archivos al cluster
+```bash
+kubectl apply -f nombre_del_archivo
+```
+
 ![alt text](<imgs/5 - subiendo YAML files.png>)
+
+### Corroboramos que todo este funcionando
 
 ![alt text](<imgs/6 - uploads.png>)
 
 > ## Funcionamiento del proyecto
 
+### Iniciamos Locust
+```bash
+locust -f main.py --host http://104.197.151.22.nip.io
+```
+
+### Ingresamos el puerto
+![alt text](<imgs/7 - configuracion locust.png>)
+
 ### Enviamos trafico con locust
-![alt text](<imgs/7 - trafico en locust.png>)
+![alt text](<imgs/8 - trafico en locust.png>)
 
 ### Logs de envios
-![alt text](<imgs/8 - logs de locust.png>)
+![alt text](<imgs/9 - logs de locust.png>)
+
+### Resumen de traffico
+![alt text](<imgs/10 - resultados locust.png>)
 
 > ## Eliminacion del cluster
 ```bash
-gcloud container clusters delete nginx-cluster --zone us-central1-a
+gcloud container clusters delete ht-cluster --zone us-central1-a
 ```
