@@ -14,18 +14,6 @@ spec:
     spec:
       containers:
       - name: go-app
-        image: gcr.io/usac-nginx-cluster/go-app
+        image: gcr.io/olimpiadas-usac/go-app
         ports:
         - containerPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: go-app-service
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 80          # Puerto expuesto al público
-      targetPort: 8080  # Puerto donde tu contenedor escucha
-  selector:
-    app: go-app  # Debe coincidir con las etiquetas del pod

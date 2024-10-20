@@ -8,8 +8,10 @@ import (
 )
 
 /* -------------------------------------------------------------------------- */
-/*                        Estructura de los estudiantes                       */
+/*                            SERVIDOR BASICO EN GO                           */
 /* -------------------------------------------------------------------------- */
+
+/* ---------------------- Estructura de los estudiantes --------------------- */
 type Student struct {
 	Student   string `json:"student"`
 	Age       int    `json:"age"`
@@ -17,10 +19,7 @@ type Student struct {
 	Discipline int   `json:"discipline"`
 }
 
-
-/* -------------------------------------------------------------------------- */
-/*                               Peticiones POST                              */
-/* -------------------------------------------------------------------------- */
+/* ---------------------------------- POST ---------------------------------- */
 func handler(w http.ResponseWriter, r *http.Request) {
 	var students []Student
 	err := json.NewDecoder(r.Body).Decode(&students)
@@ -33,10 +32,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "- Student: %s, Age: %d, Faculty: %s, Discipline: %d\n\n", student.Student, student.Age, student.Faculty, student.Discipline)
 	}
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                  Main                                      */
-/* -------------------------------------------------------------------------- */
+/* ---------------------------------- Main ---------------------------------- */
 func main() {
 	http.HandleFunc("/", handler)
 	log.Println("Server started on :8080")
