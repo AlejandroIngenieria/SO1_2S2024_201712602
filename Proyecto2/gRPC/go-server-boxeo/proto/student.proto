@@ -1,0 +1,41 @@
+syntax = "proto3";
+option go_package = "./;student";
+
+package student;
+
+
+// Servicios
+service Student {
+    rpc GetStudent(StudentRequest) returns (StudentResponse);
+}
+/*
+    El servicio es el que define los metodos que se pueden llamar en el servidor
+    y los mensajes que se envian y reciben en cada uno de los metodos.
+*/
+
+
+// Mensajes
+message StudentRequest {
+    string student = 1;
+    int32 age = 3;
+    string faculty = 2;
+    Discipline discipline = 4;
+}
+
+
+enum Discipline {
+    Unspecified = 0;
+    Natacion = 1;
+    Atletismo = 2;
+    Boxeo = 3;
+}
+/*
+    Los numeros en los enums son los valores que se le asignan a cada uno de los elementos
+    de la enumeracion, estos valores son los que se envian en la red, por lo que es importante
+    no cambiarlos una vez que se esten utilizando en produccion. Y sirven para que el cliente
+    pueda interpretar los valores que recibe del servidor.
+*/
+
+message StudentResponse {
+    bool success = 1;
+}

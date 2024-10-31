@@ -1,0 +1,108 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"log"
+	"strings"
+	"github.com/go-redis/redis/v8"
+	"github.com/segmentio/kafka-go"
+)
+
+var (
+	kafkaBroker = "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092" // Kafka broker
+	topic       = "losers" // Tópico a consumir
+	redisAddr   = "redis-service.redis:6379" // Dirección del servidor Redis
+	redisClient *redis.Client
+)
+
+// Init Kafka reader
+func initKafkaReader() *kafka.Reader {
+	return kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{kafkaBroker},
+		Topic:   topic,
+		GroupID: "my-consumer-group-losers", // Establece un GroupID
+		MinBytes: 10e3, // 10KB
+		MaxBytes: 10e6, // 10MB
+	})
+}
+
+// Init Redis client
+func initRedisClient() {
+	redisClient = redis.NewClient(&redis.Options{
+		Addr: redisAddr,
+	})
+}
+
+// Extract faculty from the message
+func extractFaculty(message string) string {
+	// Assuming the message format is: "Student: alfredo22, Age: 312, Faculty: Agro, Discipline: 1, Result: loser"
+	parts := strings.Split(message, ",")
+	for _, part := range parts {
+		if strings.Contains(part, "Faculty") {
+			return strings.TrimSpace(strings.Split(part, ":")[1]) // Extract the faculty name
+		}
+	}
+	return ""
+}
+
+// Consume messages from Kafka and send them to Redis
+func consumeFromKafka(reader *kafka.Reader) {
+	for {
+		message, err := reader.ReadMessage(context.Background())
+		if err != nil {
+			log.Printf("Error reading message: %v", err)
+			continue
+		}
+
+		msg := string(message.Value)
+		log.Printf("Received message: %s", msg)
+
+		// Extrae la facultad del mensaje
+		faculty := extractFaculty(msg)
+		if faculty == "" {
+			log.Printf("Faculty not found in message: %s", msg)
+			continue
+		}
+
+		// Almacena el mensaje en la lista de estudiantes
+		err = redisClient.LPush(context.Background(), "students", msg).Err()
+		if err != nil {
+			log.Printf("Failed to store message in Redis: %v", err)
+		} else {
+			log.Println("Message stored in Redis successfully")
+		}
+
+		// Actualiza el contador de perdedores por facultad en Redis bajo 'Result-losers'
+		loserKey := "Loser-" + faculty
+		_, err = redisClient.HIncrBy(context.Background(), "Result-losers", loserKey, 1).Result()
+		if err != nil {
+			log.Printf("Failed to increment losers counter for faculty %s: %v", faculty, err)
+		} else {
+			log.Printf("Losers counter for faculty %s incremented successfully", faculty)
+		}
+
+		if err := reader.CommitMessages(context.Background(), message); err != nil {
+			log.Printf("Failed to commit message: %v", err)
+		} else {
+			log.Println("Message committed successfully")
+		}
+	}
+}
+
+func main() {
+	flag.Parse()
+
+	// Inicializa el cliente de Redis
+	initRedisClient()
+	defer redisClient.Close() // Cierra el cliente de Redis al terminar
+
+	// Inicializa el lector de Kafka
+	reader := initKafkaReader()
+	defer reader.Close() // Cierra el reader cuando la aplicación termina
+
+	log.Printf("Kafka consumer started, listening to topic %s", topic)
+
+	// Consumir mensajes en un bucle
+	consumeFromKafka(reader)
+}
