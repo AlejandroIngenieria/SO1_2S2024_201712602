@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: kafka-consumer-go-losers
-        image: juliofernandez99/consumer-losers:1.7
+        image: alejandroingenieria/consumer-losers:0.3
         resources:
           limits:
             memory: "128Mi"
@@ -25,7 +25,9 @@ spec:
         - name: KAFKA_TOPIC
           value: "losers"
         - name: REDIS_HOST
-          value: "redis-service"  # Servicio de Redis
+          value: "my-release-redis-master"  # Servicio de Redis
+        - name: REDIS_PASSWORD
+          value: "adde8k7STR"
         - name: REDIS_PORT
           value: "6379"
         ports:

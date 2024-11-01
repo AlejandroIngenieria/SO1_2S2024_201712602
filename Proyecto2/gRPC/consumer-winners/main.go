@@ -5,33 +5,35 @@ import (
 	"flag"
 	"log"
 	"strings"
-
+	"os"
 	"github.com/go-redis/redis/v8"
 	"github.com/segmentio/kafka-go"
 )
 
 var (
 	kafkaBroker = "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092" // Kafka broker
-	topic       = "winners" // Tópico a consumir
-	redisAddr   = "redis-service.redis:6379" // Dirección del servidor Redis
+	topic       = "winners"                                                 // Tópico a consumir
+	redisAddr   = "my-release-redis-master.default:6379"                    // Dirección del servidor Redis
 	redisClient *redis.Client
 )
 
 // Init Kafka reader
 func initKafkaReader() *kafka.Reader {
 	return kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{kafkaBroker},
-		Topic:   topic,
-		GroupID: "my-consumer-group-winners", // Establece un GroupID
-		MinBytes: 10e3, // 10KB
-		MaxBytes: 10e6, // 10MB
+		Brokers:  []string{kafkaBroker},
+		Topic:    topic,
+		GroupID:  "my-consumer-group-winners", // Establece un GroupID
+		MinBytes: 10e3,                        // 10KB
+		MaxBytes: 10e6,                        // 10MB
 	})
 }
+
 
 // Init Redis client
 func initRedisClient() {
 	redisClient = redis.NewClient(&redis.Options{
-		Addr: redisAddr,
+		Addr:     redisAddr,
+		Password: os.Getenv("REDIS_PASSWORD"),
 	})
 }
 

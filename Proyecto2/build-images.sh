@@ -16,7 +16,7 @@ GO_SERVER_BOXEO_IMAGE="go-server-boxeo"
 GO_SERVER_NATACION_IMAGE="go-server-natacion"
 
 DOCKERHUB_USERNAME="alejandroingenieria"
-TAG="0.2"
+TAG="0.3"
 
 # # Build the Docker image for the Go client
 docker build -t $GO_CLIENT_IMAGE ./gRPC/go-client
